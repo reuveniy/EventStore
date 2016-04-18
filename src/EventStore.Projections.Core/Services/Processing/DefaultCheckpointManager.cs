@@ -27,12 +27,13 @@ namespace EventStore.Projections.Core.Services.Processing
         private readonly CoreProjectionCheckpointWriter _coreProjectionCheckpointWriter;
         private PartitionStateUpdateManager _partitionStateUpdateManager;
 
+        private CoreProjectionEmittedStreamsWriter _emittedStreamsWriter;
 
         public DefaultCheckpointManager(
             IPublisher publisher, Guid projectionCorrelationId, ProjectionVersion projectionVersion, IPrincipal runAs,
             IODispatcher ioDispatcher, ProjectionConfig projectionConfig, string name, PositionTagger positionTagger,
             ProjectionNamesBuilder namingBuilder, bool usePersistentCheckpoints, bool producesRunningResults, bool definesFold,
-            CoreProjectionCheckpointWriter coreProjectionCheckpointWriter)
+            CoreProjectionCheckpointWriter coreProjectionCheckpointWriter, CoreProjectionEmittedStreamsWriter emittedStreamsWriter)
             : base(
                 publisher, projectionCorrelationId, projectionConfig, name, positionTagger, namingBuilder,
                 usePersistentCheckpoints)
@@ -44,6 +45,7 @@ namespace EventStore.Projections.Core.Services.Processing
             _positionTagger = positionTagger;
             _coreProjectionCheckpointWriter = coreProjectionCheckpointWriter;
             _zeroTag = positionTagger.MakeZeroCheckpointTag();
+            _emittedStreamsWriter = emittedStreamsWriter;
         }
 
         protected override void BeginWriteCheckpoint(
@@ -155,7 +157,7 @@ namespace EventStore.Projections.Core.Services.Processing
         {
             return new ProjectionCheckpoint(
                 _ioDispatcher, _projectionVersion, _runAs, this, checkpointPosition, _positionTagger,
-                _projectionConfig.MaxWriteBatchLength, _logger);
+                _projectionConfig.MaxWriteBatchLength, _emittedStreamsWriter, _logger);
         }
 
         public void Handle(CoreProjectionCheckpointWriterMessage.CheckpointWritten message)

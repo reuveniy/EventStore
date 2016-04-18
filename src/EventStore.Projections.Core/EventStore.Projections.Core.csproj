@@ -233,6 +233,7 @@
     <Compile Include="Services\Processing\CoreProjectionCheckpointManager.cs" />
     <Compile Include="Services\Processing\CoreProjectionCheckpointReader.cs" />
     <Compile Include="Services\Processing\CoreProjectionCheckpointWriter.cs" />
+    <Compile Include="Services\Processing\CoreProjectionEmittedStreamsWriter.cs" />
     <Compile Include="Services\Processing\DefaultCheckpointManager.cs" />
     <Compile Include="Services\Processing\DefaultProjectionProcessingStrategy.cs" />
     <Compile Include="Services\Processing\EmittedDataEvent.cs" />

@@ -450,14 +450,63 @@ namespace EventStore.Projections.Core.Services.Management
             if (_state != ManagedProjectionState.Stopped && Mode != ProjectionMode.Transient)
                 throw new InvalidOperationException("Cannot delete a running projection");
             _lastAccessed = _timeProvider.Now;
+            if (message.DeleteEmittedStreams)
+            {
+                DeleteEmittedStreams();
+            }
             if (message.DeleteCheckpointStream)
             {
-                DeleteCheckpointStream();
+                var checkpointStreamName = new ProjectionNamesBuilder(_name, _persistedState.SourceDefinition).MakeCheckpointStreamName();
+                DeleteStream(checkpointStreamName);
             }
             DoDelete();
             UpdateProjectionVersion();
             SetLastReplyEnvelope(message.Envelope);
             StopUnlessPreparedOrLoaded();
+        }
+
+        private void DeleteEmittedStreams()
+        {
+            var emittedStreamsStreamName = new ProjectionNamesBuilder(_name, _persistedState.SourceDefinition).EmittedStreamsStreamName;
+            ReadEmittedStreamsStream(emittedStreamsStreamName, -1, 1);
+        }
+
+        private void ReadEmittedStreamsStream(string emittedStreamsStreamName, int fromPosition, int count)
+        {
+            var correlationId = Guid.NewGuid();
+            var msg = new ClientMessage.ReadStreamEventsBackward(
+                correlationId, correlationId, _readDispatcher.Envelope, emittedStreamsStreamName, fromPosition, count,
+                resolveLinkTos: false, requireMaster: false, validationStreamVersion: null, user: SystemAccount.Principal);
+            _readDispatcher.Publish(msg, (m) =>
+            {
+                if (m.Result == ReadStreamResult.Success && m.Events.Length == 1)
+                {
+                    var evt = m.Events[0].Event.Data.ParseJson<EmittedStreamData>();
+                    DeleteStream(evt.StreamId);
+                }
+                if (!m.IsEndOfStream)
+                {
+                    ReadEmittedStreamsStream(emittedStreamsStreamName, m.NextEventNumber, 1);
+                }
+                else
+                {
+                    DeleteStream(emittedStreamsStreamName);
+                }
+            });
+        }
+
+        private void DeleteStream(string streamId)
+        {
+            var correlationId = Guid.NewGuid();
+            _streamDispatcher.Publish(new ClientMessage.DeleteStream(
+                correlationId,
+                correlationId,
+                _writeDispatcher.Envelope,
+                true,
+                streamId,
+                ExpectedVersion.Any,
+                false,
+                SystemAccount.Principal), m => StreamDeleted(m, streamId, DeleteStream));
         }
 
         public void Handle(ProjectionManagementMessage.Command.Reset message)
@@ -485,6 +534,7 @@ namespace EventStore.Projections.Core.Services.Management
                         new NoopEnvelope(),
                         _name,
                         ProjectionManagementMessage.RunAs.System,
+                        false,
                         false,
                         false));
             }
@@ -718,7 +768,7 @@ namespace EventStore.Projections.Core.Services.Management
                 throw new NotSupportedException("Unsupported error code received");
         }
 
-        private void StreamDeleted(ClientMessage.DeleteStreamCompleted message, string eventStreamId)
+        private void StreamDeleted(ClientMessage.DeleteStreamCompleted message, string eventStreamId, Action<string> onFailure)
         {
             if (message.Result == OperationResult.Success)
             {
@@ -732,7 +782,7 @@ namespace EventStore.Projections.Core.Services.Management
             if (message.Result == OperationResult.CommitTimeout ||
                 message.Result == OperationResult.ForwardTimeout)
             {
-                DeleteCheckpointStream();
+                onFailure(eventStreamId);
             }
             else
                 throw new NotSupportedException("Unsupported error code received");
@@ -955,7 +1005,6 @@ namespace EventStore.Projections.Core.Services.Management
                 throw new Exception();
         }
 
-
         private void DoUpdateQuery1(ProjectionManagementMessage.Command.UpdateQuery message)
         {
             _persistedState.HandlerType = message.HandlerType ?? HandlerType;
@@ -1007,22 +1056,6 @@ namespace EventStore.Projections.Core.Services.Management
                 DisposeCoreProjection();
                 _output.Publish(new ProjectionManagementMessage.Internal.Deleted(_name, Id));
             }
-        }
-
-        private void DeleteCheckpointStream()
-        {
-            //delete checkpoint stream
-            var correlationId = Guid.NewGuid();
-            var checkpointStreamName = new ProjectionNamesBuilder(_name, _persistedState.SourceDefinition).MakeCheckpointStreamName();
-            _streamDispatcher.Publish(new ClientMessage.DeleteStream(
-                correlationId,
-                correlationId,
-                _writeDispatcher.Envelope,
-                true,
-                checkpointStreamName,
-                ExpectedVersion.Any,
-                false,
-                SystemAccount.Principal), m => StreamDeleted(m, checkpointStreamName));
         }
 
         private void DoDelete()

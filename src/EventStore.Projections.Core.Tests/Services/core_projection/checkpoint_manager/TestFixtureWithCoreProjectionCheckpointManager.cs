@@ -57,7 +57,7 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection.checkpoint_
             return new DefaultCheckpointManager(
                 _bus, _projectionCorrelationId, _projectionVersion, null, _ioDispatcher, _config, _projectionName,
                 new StreamPositionTagger(0, "stream"), _namingBuilder, _checkpointsEnabled, _producesResults, _definesFold,
-                _checkpointWriter);
+                _checkpointWriter, new CoreProjectionEmittedStreamsWriter(_ioDispatcher, _namingBuilder.EmittedStreamsStreamName));
         }
 
         protected new virtual void Given()

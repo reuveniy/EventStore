@@ -105,6 +105,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.query
                     HandledMessages.OfType<ClientMessage.WriteEvents>()
                         .Where(v => v.EventStreamId != "$projections-test-projection-result")
                         .Where(v => v.EventStreamId != "$$$projections-test-projection-result")
+                        .Where(v => v.EventStreamId != "$projections-test-projection-emittedstreams")
                         .Select(v => v.EventStreamId));
             }
         }

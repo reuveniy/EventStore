@@ -31,6 +31,8 @@ namespace EventStore.Projections.Core.Services.Processing
 
         private List<IEnvelope> _awaitingStreams;
 
+        private CoreProjectionEmittedStreamsWriter _emittedStreamsWriter;
+
         public ProjectionCheckpoint(
             IODispatcher ioDispatcher,
             ProjectionVersion projectionVersion,
@@ -39,13 +41,14 @@ namespace EventStore.Projections.Core.Services.Processing
             CheckpointTag from,
             PositionTagger positionTagger,
             int maxWriteBatchLength,
+            CoreProjectionEmittedStreamsWriter emittedStreamsWriter,
             ILogger logger = null)
         {
             if (ioDispatcher == null) throw new ArgumentNullException("ioDispatcher");
             if (readyHandler == null) throw new ArgumentNullException("readyHandler");
             if (positionTagger == null) throw new ArgumentNullException("positionTagger");
             if (from.CommitPosition < from.PreparePosition) throw new ArgumentException("from");
-            //NOTE: fromCommit can be equal fromPrepare on 0 position.  Is it possible anytime later? Ignoring for now.
+            //NOTE: fromCommit can be equal fromPrepare on 0 position. Is it possible anytime later? Ignoring for now.
             _ioDispatcher = ioDispatcher;
             _projectionVersion = projectionVersion;
             _runAs = runAs;
@@ -53,6 +56,7 @@ namespace EventStore.Projections.Core.Services.Processing
             _positionTagger = positionTagger;
             _from = _last = from;
             _maxWriteBatchLength = maxWriteBatchLength;
+            _emittedStreamsWriter = emittedStreamsWriter;
             _logger = logger;
         }
 
@@ -206,6 +210,11 @@ namespace EventStore.Projections.Core.Services.Processing
             if (awaitingStreams != null)
                 foreach (var stream in awaitingStreams)
                     stream.ReplyWith(message);
+
+            if (_emittedStreamsWriter != null)
+            {
+                _emittedStreamsWriter.Handle(message);
+            }
         }
     }
 }

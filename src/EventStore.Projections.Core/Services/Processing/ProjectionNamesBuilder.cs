@@ -28,6 +28,7 @@ namespace EventStore.Projections.Core.Services.Processing
         private readonly string _partitionCatalogStreamName;
         private readonly string _checkpointStreamName;
         private readonly string _orderStreamName;
+        private readonly string _emittedStreamsStreamName;
 
         public static TimeSpan MastrerStreamMaxAge = TimeSpan.FromHours(2);
         public static TimeSpan ControlStreamMaxAge = TimeSpan.FromHours(2);
@@ -50,6 +51,7 @@ namespace EventStore.Projections.Core.Services.Processing
                                           + ProjectionPartitionCatalogStreamSuffix;
             _checkpointStreamName = ProjectionsStreamPrefix + EffectiveProjectionName + ProjectionCheckpointStreamSuffix;
             _orderStreamName = ProjectionsStreamPrefix + EffectiveProjectionName + ProjectionOrderStreamSuffix;
+            _emittedStreamsStreamName = ProjectionsStreamPrefix + EffectiveProjectionName + ProjectionsEmittedStreamsSuffix;
         }
 
         public string EffectiveProjectionName
@@ -57,6 +59,10 @@ namespace EventStore.Projections.Core.Services.Processing
             get { return _sources.ForceProjectionNameOption ?? _name; }
         }
 
+        public string EmittedStreamsStreamName
+        {
+            get { return _emittedStreamsStreamName; }
+        }
 
         private string GetPartitionResultStreamName(string partitionName)
         {
@@ -78,6 +84,7 @@ namespace EventStore.Projections.Core.Services.Processing
         private const string ProjectionsControlStreamPrefix = "$projections-$";
         private const string ProjectionsStateStreamSuffix = "-result";
         private const string ProjectionCheckpointStreamSuffix = "-checkpoint";
+        public const string ProjectionsEmittedStreamsSuffix = "-emittedstreams";
         private const string ProjectionOrderStreamSuffix = "-order";
         private const string ProjectionPartitionCatalogStreamSuffix = "-partitions";
         private const string CategoryCatalogStreamNamePrefix = "$category-";

@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
-using System.Text;
 using EventStore.Common.Utils;
 using EventStore.Core.Data;
-using EventStore.Core.Util;
 using EventStore.Projections.Core.Messages;
 using EventStore.Projections.Core.Services.Processing;
 using NUnit.Framework;
@@ -40,13 +38,13 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection
         {
             Assert.IsTrue(
                 _writeEventHandler.HandledMessages.Any(
-                    v => Helper.UTF8NoBom.GetString(v.Events[0].Data) == FakeProjectionStateHandler._emit1Data));
+                    v => v.EventStreamId != "$projections-projection-emittedstreams" && Helper.UTF8NoBom.GetString(v.Events[0].Data) == FakeProjectionStateHandler._emit1Data));
         }
 
         [Test]
         public void set_a_caused_by_position_attributes()
         {
-            var metadata = _writeEventHandler.HandledMessages[0].Events[0].Metadata.ParseCheckpointTagVersionExtraJson(default(ProjectionVersion));
+            var metadata = _writeEventHandler.HandledMessages.First(x=>x.EventStreamId != "$projections-projection-emittedstreams").Events[0].Metadata.ParseCheckpointTagVersionExtraJson(default(ProjectionVersion));
             Assert.AreEqual(120, metadata.Tag.CommitPosition);
             Assert.AreEqual(110, metadata.Tag.PreparePosition);
         }

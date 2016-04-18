@@ -16,6 +16,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager
     {
         private string _projectionName;
         private const string _projectionCheckpointStream = "$projections-test-projection-checkpoint";
+        private const string _projectionEmittedStreamsStream = "$projections-test-projection-emittedstreams";
 
         protected override void Given()
         {
@@ -39,7 +40,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager
             yield return
                 new ProjectionManagementMessage.Command.Delete(
                     new PublishEnvelope(_bus), _projectionName,
-                    ProjectionManagementMessage.RunAs.System, true, true);
+                    ProjectionManagementMessage.RunAs.System, true, true, true);
         }
 
         [Test, Category("v8")]
@@ -58,6 +59,13 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager
         {
             Assert.IsTrue(
                 _consumer.HandledMessages.OfType<ClientMessage.DeleteStream>().Any(x=>x.EventStreamId == _projectionCheckpointStream));
+        }
+
+        [Test, Category("v8")]
+        public void should_have_attempted_to_delete_the_emitted_streams_stream()
+        {
+            Assert.IsTrue(
+                _consumer.HandledMessages.OfType<ClientMessage.DeleteStream>().Any(x=>x.EventStreamId == _projectionEmittedStreamsStream));
         }
     }
 }

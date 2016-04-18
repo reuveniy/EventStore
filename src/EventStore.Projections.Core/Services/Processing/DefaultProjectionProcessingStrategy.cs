@@ -52,7 +52,6 @@ namespace EventStore.Projections.Core.Services.Processing
                 definesFold,
                 readerStrategy);
 
-
             var resultWriter = CreateFirstPhaseResultWriter(
                 checkpointManager as IEmittedEventWriter,
                 zeroCheckpointTag,
@@ -73,7 +72,7 @@ namespace EventStore.Projections.Core.Services.Processing
 
             return CreateProjectionProcessingPhases(
                 publisher,
-                inputQueue, 
+                inputQueue,
                 projectionCorrelationId,
                 namingBuilder,
                 partitionStateCache,
@@ -149,7 +148,8 @@ namespace EventStore.Projections.Core.Services.Processing
                     publisher, projectionCorrelationId, _projectionVersion, _projectionConfig.RunAs, ioDispatcher,
                     _projectionConfig, _name, readerStrategy.PositionTagger, namingBuilder,
                     _projectionConfig.CheckpointsEnabled, GetProducesRunningResults(), definesFold,
-                    coreProjectionCheckpointWriter);
+                    coreProjectionCheckpointWriter,
+                    new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
             }
             else
             {
@@ -157,7 +157,8 @@ namespace EventStore.Projections.Core.Services.Processing
                     publisher, projectionCorrelationId, _projectionVersion, _projectionConfig.RunAs, ioDispatcher,
                     _projectionConfig, _name, readerStrategy.PositionTagger, namingBuilder,
                     _projectionConfig.CheckpointsEnabled, GetProducesRunningResults(), definesFold,
-                    coreProjectionCheckpointWriter);
+                    coreProjectionCheckpointWriter,
+                    new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
             }
         }
 
@@ -230,7 +231,7 @@ namespace EventStore.Projections.Core.Services.Processing
             return _sourceDefinition.ByCustomPartitions
                 ? new ByHandleStatePartitionSelector(_stateHandler)
                 : (_sourceDefinition.ByStreams
-                    ? (StatePartitionSelector) new ByStreamStatePartitionSelector()
+                    ? (StatePartitionSelector)new ByStreamStatePartitionSelector()
                     : new NoopStatePartitionSelector());
         }
     }

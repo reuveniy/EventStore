@@ -259,6 +259,7 @@ namespace EventStore.Projections.Core.Services.Management
                 RunAs = message.RunAs,
                 DeleteCheckpointStream = message.DeleteCheckpointStream,
                 DeleteStateStream = message.DeleteStateStream,
+                DeleteEmittedStreams = message.DeleteEmittedStreams
             };
             _writer.PublishCommand("$delete", command);
         }

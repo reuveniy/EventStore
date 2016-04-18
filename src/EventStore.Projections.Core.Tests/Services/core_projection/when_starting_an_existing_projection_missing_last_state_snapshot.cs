@@ -1,9 +1,9 @@
 using System;
-using System.Text;
 using EventStore.Common.Utils;
 using EventStore.Core.Data;
 using EventStore.Projections.Core.Messages;
 using NUnit.Framework;
+using System.Linq;
 using ResolvedEvent = EventStore.Projections.Core.Services.Processing.ResolvedEvent;
 
 namespace EventStore.Projections.Core.Tests.Services.core_projection
@@ -41,9 +41,9 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection
         [Test]
         public void should_not_emit_events_but_write_the_new_state_snapshot()
         {
-            Assert.AreEqual(1, _writeEventHandler.HandledMessages.Count);
+            Assert.AreEqual(1, _writeEventHandler.HandledMessages.Count(x=>x.EventStreamId != "$projections-projection-emittedstreams"));
 
-            var data = Helper.UTF8NoBom.GetString(_writeEventHandler.HandledMessages[0].Events[0].Data);
+            var data = Helper.UTF8NoBom.GetString(_writeEventHandler.HandledMessages.First(x=>x.EventStreamId != "$projections-projection-emittedstreams").Events[0].Data);
             Assert.AreEqual("data", data);
         }
     }

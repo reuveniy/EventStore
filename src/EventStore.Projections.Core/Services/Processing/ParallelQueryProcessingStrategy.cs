@@ -93,7 +93,8 @@ namespace EventStore.Projections.Core.Services.Processing
                 GetUseCheckpoints(),
                 false,
                 _sourceDefinition.DefinesFold,
-                coreProjectionCheckpointWriter);
+                coreProjectionCheckpointWriter,
+                new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
 
             var writeResultsPhase = new WriteQueryEofProjectionProcessingPhase(
                 publisher,

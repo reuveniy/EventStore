@@ -49,14 +49,14 @@ namespace EventStore.Projections.Core.Services.Processing
             PartitionStateCache partitionStateCache, CoreProjection coreProjection, IODispatcher ioDispatcher,
             IProjectionProcessingPhase firstPhase)
         {
-
             var coreProjectionCheckpointWriter =
                 new CoreProjectionCheckpointWriter(
                     namingBuilder.MakeCheckpointStreamName(), ioDispatcher, _projectionVersion, _name);
             var checkpointManager2 = new DefaultCheckpointManager(
                 publisher, projectionCorrelationId, _projectionVersion, SystemAccount.Principal, ioDispatcher,
                 _projectionConfig, _name, new PhasePositionTagger(1), namingBuilder, GetUseCheckpoints(), false,
-                _sourceDefinition.DefinesFold, coreProjectionCheckpointWriter);
+                _sourceDefinition.DefinesFold, coreProjectionCheckpointWriter,
+                new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
 
             IProjectionProcessingPhase writeResultsPhase;
             if (GetProducesRunningResults()
@@ -79,7 +79,7 @@ namespace EventStore.Projections.Core.Services.Processing
                     checkpointManager2,
                     checkpointManager2);
 
-            return new[] {firstPhase, writeResultsPhase};
+            return new[] { firstPhase, writeResultsPhase };
         }
 
         protected override IResultEventEmitter CreateFirstPhaseResultEmitter(ProjectionNamesBuilder namingBuilder)
