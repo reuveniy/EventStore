@@ -18,6 +18,7 @@ namespace EventStore.Projections.Core.Messages.Persisted.Commands
         public bool CreateTempStreams;
         public bool StopOnEof;
         public bool IsSlaveProjection;
+        public bool TrackEmittedStreams;
 
         public PersistedProjectionConfig()
         {
@@ -36,6 +37,7 @@ namespace EventStore.Projections.Core.Messages.Persisted.Commands
             MaxWriteBatchLength = config.MaxWriteBatchLength;
             EmitEventEnabled = config.EmitEventEnabled;
             CheckpointsEnabled = config.CheckpointsEnabled;
+            TrackEmittedStreams = config.TrackEmittedStreams;
             CreateTempStreams = config.CreateTempStreams;
             StopOnEof = config.StopOnEof;
             IsSlaveProjection = config.IsSlaveProjection;
@@ -54,6 +56,7 @@ namespace EventStore.Projections.Core.Messages.Persisted.Commands
                     MaxWriteBatchLength,
                     EmitEventEnabled,
                     CheckpointsEnabled,
+                    TrackEmittedStreams,
                     CreateTempStreams,
                     StopOnEof,
                     IsSlaveProjection);

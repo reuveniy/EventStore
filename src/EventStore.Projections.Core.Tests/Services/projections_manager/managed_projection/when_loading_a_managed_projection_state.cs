@@ -50,7 +50,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
         {
             ProjectionManagementMessage.Command.Post message = new ProjectionManagementMessage.Command.Post(
                 new NoopEnvelope(), ProjectionMode.OneTime, "name", ProjectionManagementMessage.RunAs.Anonymous,
-                (string)null, @"log(1);", enabled: true, checkpointsEnabled: false, emitEnabled: false);
+                (string)null, @"log(1);", enabled: true, checkpointsEnabled: false, emitEnabled: false, trackEmittedStreams: false);
             _mp.InitializeNew(
                 new ManagedProjection.PersistedState
                 {
@@ -60,6 +60,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
                     Mode = message.Mode,
                     EmitEnabled = message.EmitEnabled,
                     CheckpointsDisabled = !message.CheckpointsEnabled,
+                    TrackEmittedStreams = message.TrackEmittedStreams,
                     Epoch = -1,
                     Version = -1,
                     RunAs = message.EnableRunAs ? SerializedRunAs.SerializePrincipal(message.RunAs) : null,
@@ -72,7 +73,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
         {
             ProjectionManagementMessage.Command.Post message = new ProjectionManagementMessage.Command.Post(
                 new NoopEnvelope(), ProjectionMode.OneTime, "name", ProjectionManagementMessage.RunAs.Anonymous, "",
-                @"log(1);", enabled: true, checkpointsEnabled: false, emitEnabled: false);
+                @"log(1);", enabled: true, checkpointsEnabled: false, emitEnabled: false, trackEmittedStreams: false);
             _mp.InitializeNew(
                 new ManagedProjection.PersistedState
                 {
@@ -82,6 +83,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
                     Mode = message.Mode,
                     EmitEnabled = message.EmitEnabled,
                     CheckpointsDisabled = !message.CheckpointsEnabled,
+                    TrackEmittedStreams = message.TrackEmittedStreams,
                     Epoch = -1,
                     Version = -1,
                     RunAs = message.EnableRunAs ? SerializedRunAs.SerializePrincipal(message.RunAs) : null,
@@ -94,7 +96,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
         {
             ProjectionManagementMessage.Command.Post message = new ProjectionManagementMessage.Command.Post(
                 new NoopEnvelope(), ProjectionMode.OneTime, "name", ProjectionManagementMessage.RunAs.Anonymous,
-                "JS", query: null, enabled: true, checkpointsEnabled: false, emitEnabled: false);
+                "JS", query: null, enabled: true, checkpointsEnabled: false, emitEnabled: false, trackEmittedStreams: false);
             _mp.InitializeNew(
                 new ManagedProjection.PersistedState
                 {
@@ -104,6 +106,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.managed
                     Mode = message.Mode,
                     EmitEnabled = message.EmitEnabled,
                     CheckpointsDisabled = !message.CheckpointsEnabled,
+                    TrackEmittedStreams = message.TrackEmittedStreams,
                     Epoch = -1,
                     Version = -1,
                     RunAs = message.EnableRunAs ? SerializedRunAs.SerializePrincipal(message.RunAs) : null,

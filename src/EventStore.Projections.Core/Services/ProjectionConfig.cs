@@ -12,12 +12,13 @@ namespace EventStore.Projections.Core.Services
         private readonly int _maxWriteBatchLength;
         private readonly bool _emitEventEnabled;
         private readonly bool _checkpointsEnabled;
+        private readonly bool _trackEmittedStreams;
         private readonly bool _createTempStreams;
         private readonly bool _stopOnEof;
         private readonly bool _isSlaveProjection;
 
         public ProjectionConfig(IPrincipal runAs, int checkpointHandledThreshold, int checkpointUnhandledBytesThreshold,
-            int pendingEventsThreshold, int maxWriteBatchLength, bool emitEventEnabled, bool checkpointsEnabled,
+            int pendingEventsThreshold, int maxWriteBatchLength, bool emitEventEnabled, bool checkpointsEnabled, bool trackEmittedStreams,
             bool createTempStreams, bool stopOnEof, bool isSlaveProjection)
         {
             if (checkpointsEnabled)
@@ -41,6 +42,7 @@ namespace EventStore.Projections.Core.Services
             _maxWriteBatchLength = maxWriteBatchLength;
             _emitEventEnabled = emitEventEnabled;
             _checkpointsEnabled = checkpointsEnabled;
+            _trackEmittedStreams = trackEmittedStreams;
             _createTempStreams = createTempStreams;
             _stopOnEof = stopOnEof;
             _isSlaveProjection = isSlaveProjection;
@@ -71,6 +73,11 @@ namespace EventStore.Projections.Core.Services
             get { return _checkpointsEnabled; }
         }
 
+        public bool TrackEmittedStreams
+        {
+            get { return _trackEmittedStreams; }
+        }
+
         public int PendingEventsThreshold
         {
             get { return _pendingEventsThreshold; }
@@ -98,14 +105,14 @@ namespace EventStore.Projections.Core.Services
 
         public static ProjectionConfig GetTest()
         {
-            return new ProjectionConfig(null, 1000, 1000*1000, 100, 500, true, true, false, false, false);
+            return new ProjectionConfig(null, 1000, 1000*1000, 100, 500, true, true, true, false, false, false);
         }
 
         public ProjectionConfig SetIsSlave()
         {
             return new ProjectionConfig(
                 _runAs, CheckpointHandledThreshold, CheckpointUnhandledBytesThreshold, PendingEventsThreshold,
-                MaxWriteBatchLength, EmitEventEnabled, _checkpointsEnabled, CreateTempStreams, StopOnEof, true);
+                MaxWriteBatchLength, EmitEventEnabled, _checkpointsEnabled, _trackEmittedStreams, CreateTempStreams, StopOnEof, true);
         }
     }
 }

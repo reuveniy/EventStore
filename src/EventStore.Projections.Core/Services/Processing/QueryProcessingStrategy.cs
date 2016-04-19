@@ -56,7 +56,7 @@ namespace EventStore.Projections.Core.Services.Processing
                 publisher, projectionCorrelationId, _projectionVersion, SystemAccount.Principal, ioDispatcher,
                 _projectionConfig, _name, new PhasePositionTagger(1), namingBuilder, GetUseCheckpoints(), false,
                 _sourceDefinition.DefinesFold, coreProjectionCheckpointWriter,
-                new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
+                _projectionConfig.TrackEmittedStreams ? new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName) : null);
 
             IProjectionProcessingPhase writeResultsPhase;
             if (GetProducesRunningResults()

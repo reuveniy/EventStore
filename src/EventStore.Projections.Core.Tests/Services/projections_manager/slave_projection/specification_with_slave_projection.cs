@@ -45,6 +45,7 @@ namespace EventStore.Projections.Core.Tests.Services.projections_manager.slave_p
                         false,
                         false,
                         false,
+                        false,
                         true,
                         isSlaveProjection: true),
                     _masterWorkerId,

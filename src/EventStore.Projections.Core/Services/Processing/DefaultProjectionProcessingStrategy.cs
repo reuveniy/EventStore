@@ -149,7 +149,7 @@ namespace EventStore.Projections.Core.Services.Processing
                     _projectionConfig, _name, readerStrategy.PositionTagger, namingBuilder,
                     _projectionConfig.CheckpointsEnabled, GetProducesRunningResults(), definesFold,
                     coreProjectionCheckpointWriter,
-                    new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
+                    _projectionConfig.TrackEmittedStreams ? new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName) : null);
             }
             else
             {
@@ -158,7 +158,7 @@ namespace EventStore.Projections.Core.Services.Processing
                     _projectionConfig, _name, readerStrategy.PositionTagger, namingBuilder,
                     _projectionConfig.CheckpointsEnabled, GetProducesRunningResults(), definesFold,
                     coreProjectionCheckpointWriter,
-                    new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
+                    _projectionConfig.TrackEmittedStreams ? new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName) : null);
             }
         }
 

@@ -94,7 +94,7 @@ namespace EventStore.Projections.Core.Services.Processing
                 false,
                 _sourceDefinition.DefinesFold,
                 coreProjectionCheckpointWriter,
-                new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName));
+                _projectionConfig.TrackEmittedStreams ? new CoreProjectionEmittedStreamsWriter(ioDispatcher, namingBuilder.EmittedStreamsStreamName) : null);
 
             var writeResultsPhase = new WriteQueryEofProjectionProcessingPhase(
                 publisher,
@@ -192,7 +192,7 @@ namespace EventStore.Projections.Core.Services.Processing
                     new SlaveProjectionDefinitions.Definition(
                         "slave", _handlerType, _query,
                         SlaveProjectionDefinitions.SlaveProjectionRequestedNumber.OnePerThread, ProjectionMode.Transient,
-                        _projectionConfig.EmitEventEnabled, _projectionConfig.CheckpointsEnabled,
+                        _projectionConfig.EmitEventEnabled, _projectionConfig.CheckpointsEnabled, _projectionConfig.TrackEmittedStreams,
                         runAs1: new ProjectionManagementMessage.RunAs(_projectionConfig.RunAs), enableRunAs: true));
         }
     }

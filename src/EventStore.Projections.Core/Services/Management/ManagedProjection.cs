@@ -82,6 +82,7 @@ namespace EventStore.Projections.Core.Services.Management
             public bool? EmitEnabled { get; set; }
             public bool? CreateTempStreams { get; set; }
             public bool? CheckpointsDisabled { get; set; }
+            public bool? TrackEmittedStreams { get; set; }
             public int? Epoch { get; set; }
             public int? Version { get; set; }
             public SerializedRunAs RunAs { get; set; }
@@ -467,8 +468,11 @@ namespace EventStore.Projections.Core.Services.Management
 
         private void DeleteEmittedStreams()
         {
-            var emittedStreamsStreamName = new ProjectionNamesBuilder(_name, _persistedState.SourceDefinition).EmittedStreamsStreamName;
-            ReadEmittedStreamsStream(emittedStreamsStreamName, -1, 1);
+            if (_persistedState.TrackEmittedStreams == true)
+            {
+                var emittedStreamsStreamName = new ProjectionNamesBuilder(_name, _persistedState.SourceDefinition).EmittedStreamsStreamName;
+                ReadEmittedStreamsStream(emittedStreamsStreamName, -1, 1);
+            }
         }
 
         private void ReadEmittedStreamsStream(string emittedStreamsStreamName, int fromPosition, int count)
@@ -966,6 +970,7 @@ namespace EventStore.Projections.Core.Services.Management
         private ProjectionConfig CreateDefaultProjectionConfiguration()
         {
             var checkpointsEnabled = _persistedState.CheckpointsDisabled != true;
+            var trackEmittedStreams = _persistedState.TrackEmittedStreams == true;
             var checkpointHandledThreshold = checkpointsEnabled ? 4000 : 0;
             var checkpointUnhandledBytesThreshold = checkpointsEnabled ? 10*1000*1000 : 0;
             var pendingEventsThreshold = 5000;
@@ -982,6 +987,7 @@ namespace EventStore.Projections.Core.Services.Management
                 maxWriteBatchLength,
                 emitEventEnabled,
                 checkpointsEnabled,
+                trackEmittedStreams,
                 createTempStreams,
                 stopOnEof,
                 isSlaveProjection: false);

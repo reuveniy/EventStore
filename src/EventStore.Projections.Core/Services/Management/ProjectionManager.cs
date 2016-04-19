@@ -824,6 +824,7 @@ namespace EventStore.Projections.Core.Services.Management
                             message.Enabled,
                             message.EmitEnabled,
                             message.CheckpointsEnabled,
+                            message.TrackEmittedStreams,
                             message.EnableRunAs,
                             message.RunAs,
                             replyEnvelope);
@@ -847,6 +848,7 @@ namespace EventStore.Projections.Core.Services.Management
                     message.Enabled,
                     message.EmitEnabled,
                     message.CheckpointsEnabled,
+                    message.TrackEmittedStreams,
                     message.EnableRunAs,
                     message.RunAs,
                     replyEnvelope);
@@ -883,6 +885,7 @@ namespace EventStore.Projections.Core.Services.Management
             private readonly ProjectionMode _projectionMode;
             private readonly bool _emitEnabled;
             private readonly bool _checkpointsEnabled;
+            private readonly bool _trackEmittedStreams;
             private readonly bool _enableRunAs;
             private readonly ProjectionManagementMessage.RunAs _runAs;
             private readonly IEnvelope _replyEnvelope;
@@ -897,6 +900,7 @@ namespace EventStore.Projections.Core.Services.Management
                 bool enabled,
                 bool emitEnabled,
                 bool checkpointsEnabled,
+                bool trackEmittedStreams,
                 bool enableRunAs,
                 ProjectionManagementMessage.RunAs runAs,
                 IEnvelope replyEnvelope)
@@ -914,6 +918,7 @@ namespace EventStore.Projections.Core.Services.Management
                 _projectionMode = projectionMode;
                 _emitEnabled = emitEnabled;
                 _checkpointsEnabled = checkpointsEnabled;
+                _trackEmittedStreams = trackEmittedStreams;
                 _enableRunAs = enableRunAs;
                 _runAs = runAs;
                 _replyEnvelope = replyEnvelope;
@@ -946,6 +951,7 @@ namespace EventStore.Projections.Core.Services.Management
                         Mode = _projectionMode,
                         EmitEnabled = _emitEnabled,
                         CheckpointsDisabled = !_checkpointsEnabled,
+                        TrackEmittedStreams = _trackEmittedStreams,
                         Epoch = -1,
                         Version = version,
                         RunAs = _enableRunAs ? SerializedRunAs.SerializePrincipal(_runAs) : null
@@ -1150,6 +1156,7 @@ namespace EventStore.Projections.Core.Services.Management
                 true,
                 @group.EmitEnabled,
                 @group.CheckpointsEnabled,
+                @group.TrackEmittedStreams,
                 @group.EnableRunAs,
                 @group.RunAs1,
                 replyEnvelope: null);

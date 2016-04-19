@@ -15,5 +15,6 @@ namespace EventStore.Projections.Core.Messages.Persisted.Responses
         public string HandlerType;
         public ProjectionMode Mode;
         public string Query;
+        public bool TrackEmittedStreams;
     }
 }

@@ -47,10 +47,11 @@ namespace EventStore.Projections.Core.Messages
                 private readonly bool _checkpointsEnabled;
                 private readonly bool _emitEnabled;
                 private readonly bool _enableRunAs;
+                private readonly bool _trackEmittedStreams;
 
                 public Post(
                     IEnvelope envelope, ProjectionMode mode, string name, RunAs runAs, string handlerType, string query,
-                    bool enabled, bool checkpointsEnabled, bool emitEnabled, bool enableRunAs = false)
+                    bool enabled, bool checkpointsEnabled, bool emitEnabled, bool enableRunAs = false, bool trackEmittedStreams = false)
                     : base(envelope, runAs)
                 {
                     _name = name;
@@ -61,11 +62,12 @@ namespace EventStore.Projections.Core.Messages
                     _checkpointsEnabled = checkpointsEnabled;
                     _emitEnabled = emitEnabled;
                     _enableRunAs = enableRunAs;
+                    _trackEmittedStreams = trackEmittedStreams;
                 }
 
                 public Post(
                     IEnvelope envelope, ProjectionMode mode, string name, RunAs runAs, Type handlerType, string query,
-                    bool enabled, bool checkpointsEnabled, bool emitEnabled, bool enableRunAs = false)
+                    bool enabled, bool checkpointsEnabled, bool emitEnabled, bool enableRunAs = false, bool trackEmittedStreams = false)
                     : base(envelope, runAs)
                 {
                     _name = name;
@@ -76,6 +78,7 @@ namespace EventStore.Projections.Core.Messages
                     _checkpointsEnabled = checkpointsEnabled;
                     _emitEnabled = emitEnabled;
                     _enableRunAs = enableRunAs;
+                    _trackEmittedStreams = trackEmittedStreams;
                 }
                 // shortcut for posting ad-hoc JS queries
                 public Post(IEnvelope envelope, RunAs runAs, string query, bool enabled)
@@ -88,6 +91,7 @@ namespace EventStore.Projections.Core.Messages
                     _enabled = enabled;
                     _checkpointsEnabled = false;
                     _emitEnabled = false;
+                    _trackEmittedStreams = false;
                 }
 
                 public ProjectionMode Mode
@@ -128,6 +132,11 @@ namespace EventStore.Projections.Core.Messages
                 public bool EnableRunAs
                 {
                     get { return _enableRunAs; }
+                }
+
+                public bool TrackEmittedStreams
+                {
+                    get { return _trackEmittedStreams; }
                 }
             }
 

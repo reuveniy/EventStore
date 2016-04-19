@@ -17,6 +17,7 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection.checkpoint_
         protected int _maxWriteBatchLength;
         protected bool _emitEventEnabled;
         protected bool _checkpointsEnabled;
+        protected bool _trackEmittedStreams;
         protected bool _producesResults;
         protected bool _definesFold = true;
         protected Guid _projectionCorrelationId;
@@ -36,7 +37,7 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection.checkpoint_
             _namingBuilder = ProjectionNamesBuilder.CreateForTest("projection");
             _config = new ProjectionConfig(null, _checkpointHandledThreshold, _checkpointUnhandledBytesThreshold,
                 _pendingEventsThreshold, _maxWriteBatchLength, _emitEventEnabled,
-                _checkpointsEnabled, _createTempStreams, _stopOnEof, isSlaveProjection: false);
+                _checkpointsEnabled, _trackEmittedStreams, _createTempStreams, _stopOnEof, isSlaveProjection: false);
             When();
         }
 
@@ -57,7 +58,7 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection.checkpoint_
             return new DefaultCheckpointManager(
                 _bus, _projectionCorrelationId, _projectionVersion, null, _ioDispatcher, _config, _projectionName,
                 new StreamPositionTagger(0, "stream"), _namingBuilder, _checkpointsEnabled, _producesResults, _definesFold,
-                _checkpointWriter, new CoreProjectionEmittedStreamsWriter(_ioDispatcher, _namingBuilder.EmittedStreamsStreamName));
+                _checkpointWriter, _trackEmittedStreams ? new CoreProjectionEmittedStreamsWriter(_ioDispatcher, _namingBuilder.EmittedStreamsStreamName) : null);
         }
 
         protected new virtual void Given()
@@ -87,6 +88,7 @@ namespace EventStore.Projections.Core.Tests.Services.core_projection.checkpoint_
             _maxWriteBatchLength = 5;
             _emitEventEnabled = true;
             _checkpointsEnabled = true;
+            _trackEmittedStreams = true;
             _producesResults = true;
             _definesFold = true;
             _createTempStreams = false;
