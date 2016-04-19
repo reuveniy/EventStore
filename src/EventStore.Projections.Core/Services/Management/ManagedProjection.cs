@@ -513,6 +513,7 @@ namespace EventStore.Projections.Core.Services.Management
         {
             _lastAccessed = _timeProvider.Now;
             _prepared = false;
+            DeleteEmittedStreams();
             DoReset1();
             UpdateProjectionVersion();
             SetLastReplyEnvelope(message.Envelope);
