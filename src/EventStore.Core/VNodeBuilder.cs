@@ -24,80 +24,80 @@ namespace EventStore.Core
     /// Allows a client to build a <see cref="ClusterVNode" /> for use with the Embedded client API by specifying
     /// high level options rather than using the constructor of <see cref="ClusterVNode"/> directly.
     /// </summary>
-    public class VNodeBuilder
+    public abstract class VNodeBuilder
     {
         // ReSharper disable FieldCanBeMadeReadOnly.Local - as more options are added
-        private int _chunkSize;
-        private string _dbPath;
-        private long _chunksCacheSize;
-        private bool _inMemoryDb;
-        private bool _startStandardProjections;
-        private bool _disableHTTPCaching;
-        private bool _logHttpRequests;
-        private bool _enableHistograms;
+        protected int _chunkSize;
+        protected string _dbPath;
+        protected long _chunksCacheSize;
+        protected bool _inMemoryDb;
+        protected bool _startStandardProjections;
+        protected bool _disableHTTPCaching;
+        protected bool _logHttpRequests;
+        protected bool _enableHistograms;
 
-        private IPEndPoint _internalTcp;
-        private IPEndPoint _internalSecureTcp;
-        private IPEndPoint _externalTcp;
-        private IPEndPoint _externalSecureTcp;
-        private IPEndPoint _internalHttp;
-        private IPEndPoint _externalHttp;
+        protected IPEndPoint _internalTcp;
+        protected IPEndPoint _internalSecureTcp;
+        protected IPEndPoint _externalTcp;
+        protected IPEndPoint _externalSecureTcp;
+        protected IPEndPoint _internalHttp;
+        protected IPEndPoint _externalHttp;
 
-        private List<string> _intHttpPrefixes;
-        private List<string> _extHttpPrefixes;
-        private bool _enableTrustedAuth;
-        private X509Certificate2 _certificate;
-        private int _workerThreads;
+        protected List<string> _intHttpPrefixes;
+        protected List<string> _extHttpPrefixes;
+        protected bool _enableTrustedAuth;
+        protected X509Certificate2 _certificate;
+        protected int _workerThreads;
 
-        private bool _discoverViaDns;
-        private string _clusterDns;
-        private List<IPEndPoint> _gossipSeeds;
+        protected bool _discoverViaDns;
+        protected string _clusterDns;
+        protected List<IPEndPoint> _gossipSeeds;
 
-        private TimeSpan _minFlushDelay;
+        protected TimeSpan _minFlushDelay;
 
-        private int _clusterNodeCount;
-        private int _prepareAckCount;
-        private int _commitAckCount;
-        private TimeSpan _prepareTimeout;
-        private TimeSpan _commitTimeout;
+        protected int _clusterNodeCount;
+        protected int _prepareAckCount;
+        protected int _commitAckCount;
+        protected TimeSpan _prepareTimeout;
+        protected TimeSpan _commitTimeout;
 
-        private int _nodePriority;
+        protected int _nodePriority;
 
-        private bool _useSsl;
-        private string _sslTargetHost;
-        private bool _sslValidateServer;
+        protected bool _useSsl;
+        protected string _sslTargetHost;
+        protected bool _sslValidateServer;
 
-        private TimeSpan _statsPeriod;
+        protected TimeSpan _statsPeriod;
 
-        private IAuthenticationProviderFactory _authenticationProviderFactory;
-        private bool _disableScavengeMerging;
-        private int _scavengeHistoryMaxAge;
-        private bool _adminOnPublic;
-        private bool _statsOnPublic;
-        private bool _gossipOnPublic;
-        private TimeSpan _gossipInterval;
-        private TimeSpan _gossipAllowedTimeDifference;
-        private TimeSpan _gossipTimeout;
+        protected IAuthenticationProviderFactory _authenticationProviderFactory;
+        protected bool _disableScavengeMerging;
+        protected int _scavengeHistoryMaxAge;
+        protected bool _adminOnPublic;
+        protected bool _statsOnPublic;
+        protected bool _gossipOnPublic;
+        protected TimeSpan _gossipInterval;
+        protected TimeSpan _gossipAllowedTimeDifference;
+        protected TimeSpan _gossipTimeout;
 
-        private TimeSpan _intTcpHeartbeatTimeout;
-        private TimeSpan _intTcpHeartbeatInterval;
-        private TimeSpan _extTcpHeartbeatTimeout;
-        private TimeSpan _extTcpHeartbeatInterval;
+        protected TimeSpan _intTcpHeartbeatTimeout;
+        protected TimeSpan _intTcpHeartbeatInterval;
+        protected TimeSpan _extTcpHeartbeatTimeout;
+        protected TimeSpan _extTcpHeartbeatInterval;
 
-        private bool _skipVerifyDbHashes;
-        private int _maxMemtableSize;
-        private List<ISubsystem> _subsystems;
-        private int _clusterGossipPort;
+        protected bool _skipVerifyDbHashes;
+        protected int _maxMemtableSize;
+        protected List<ISubsystem> _subsystems;
+        protected int _clusterGossipPort;
 
-        private string _index;
-        private int _indexCacheDepth;
-        private bool _unsafeIgnoreHardDelete;
-        private bool _betterOrdering;
-        private ProjectionType _projectionType;
-        // private int _projectionsThreads;
+        protected string _index;
+        protected int _indexCacheDepth;
+        protected bool _unsafeIgnoreHardDelete;
+        protected bool _betterOrdering;
+        protected ProjectionType _projectionType;
+        protected int _projectionsThreads;
         // ReSharper restore FieldCanBeMadeReadOnly.Local
 
-        private VNodeBuilder()
+        protected VNodeBuilder()
         {
             _chunkSize = TFConsts.ChunkSize;
             _dbPath = Path.Combine(Path.GetTempPath(), "EmbeddedEventStore", string.Format("{0:yyyy-MM-dd_HH.mm.ss.ffffff}-EmbeddedNode", DateTime.UtcNow));
@@ -168,37 +168,6 @@ namespace EventStore.Core
         }
 
         /// <summary>
-        /// Returns a builder set to construct options for a single node instance
-        /// </summary>
-        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
-        public static VNodeBuilder AsSingleNode()
-        {
-            var ret = new VNodeBuilder
-            {
-                _clusterNodeCount = 1,
-                _prepareAckCount = 1,
-                _commitAckCount = 1
-            };
-            return ret;
-        }
-
-        /// <summary>
-        /// Returns a builder set to construct options for a cluster node instance with a cluster size 
-        /// </summary>
-        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
-        public static VNodeBuilder AsClusterMember(int clusterSize)
-        {
-            int quorumSize = clusterSize / 2;
-            var ret = new VNodeBuilder
-            {
-                _clusterNodeCount = clusterSize,
-                _prepareAckCount = quorumSize,
-                _commitAckCount = quorumSize
-            };
-            return ret;
-        }
-
-        /// <summary>
         /// Start standard projections.
         /// </summary>
         /// <returns></returns>
@@ -227,7 +196,7 @@ namespace EventStore.Core
         public VNodeBuilder RunProjections(ProjectionType projectionType, int numberOfThreads = Opts.ProjectionThreadsDefault)
         {
             _projectionType = projectionType;
-            // _projectionsThreads = numberOfThreads;
+            _projectionsThreads = numberOfThreads;
             return this;
         }
 
@@ -859,11 +828,7 @@ namespace EventStore.Core
             }
         }
 
-        // TODO: SubSystems - will need to set this up on the embedded client side, too
-        private void SetUpProjectionsIfNeeded()
-        {
-            // _subsystems.Add(new ProjectionsSubsystem(_projectionsThreads, _projectionType, _startStandardProjections));
-        }
+        protected abstract void SetUpProjectionsIfNeeded();
 
         /// <summary>
         /// Converts an <see cref="VNodeBuilder"/> to a <see cref="ClusterVNode"/>.
@@ -882,7 +847,7 @@ namespace EventStore.Core
         public ClusterVNode Build(IOptions options = null, StatsStorage statsStorage = StatsStorage.Stream, IPersistentSubscriptionConsumerStrategyFactory[] consumerStrategies = null)
         {
             EnsureHttpPrefixes();
-            // SetUpProjectionsIfNeeded(); TODO: SubSystems
+            SetUpProjectionsIfNeeded();
 
             var dbConfig = CreateDbConfig(_chunkSize, _dbPath, _chunksCacheSize,
                     _inMemoryDb);

@@ -29,7 +29,6 @@ namespace EventStore.ClusterNode
     public class Program : ProgramBase<ClusterNodeOptions>
     {
         private ClusterVNode _node;
-        private Projections.Core.ProjectionsSubsystem _projections;
         private ExclusiveDbLock _dbLock;
         private ClusterNodeMutex _clusterNodeMutex;
 
@@ -123,8 +122,7 @@ namespace EventStore.ClusterNode
             var enabledNodeSubsystems = runProjections >= ProjectionType.System
                 ? new[] { NodeSubsystems.Projections }
             : new NodeSubsystems[0];
-            _projections = new Projections.Core.ProjectionsSubsystem(opts.ProjectionThreads, opts.RunProjections, opts.StartStandardProjections);
-            _node = BuildNode(opts, _projections);
+            _node = BuildNode(opts);
             RegisterWebControllers(enabledNodeSubsystems, opts);
         }
 
@@ -146,7 +144,7 @@ namespace EventStore.ClusterNode
             return clusterSize / 2 + 1;
         }
 
-        private static ClusterVNode BuildNode(ClusterNodeOptions options, ISubsystem projections)
+        private static ClusterVNode BuildNode(ClusterNodeOptions options)
         {
             if (options.UseInternalSsl)
             {
@@ -210,9 +208,9 @@ namespace EventStore.ClusterNode
 
             VNodeBuilder builder;
             if(options.ClusterSize > 1) {
-                builder = VNodeBuilder.AsClusterMember(options.ClusterSize);
+                builder = ClusterVNodeBuilder.AsClusterMember(options.ClusterSize);
             } else {
-                builder = VNodeBuilder.AsSingleNode();
+                builder = ClusterVNodeBuilder.AsSingleNode();
             }
 
             builder.WithInternalTcpOn(intTcpEndPoint)
@@ -240,8 +238,8 @@ namespace EventStore.ClusterNode
                         .WithScavengeHistoryMaxAge(options.ScavengeHistoryMaxAge)
                         .WithIndexPath(options.Index)
                         .WithIndexCacheDepth(options.IndexCacheDepth)
-                        .AddCustomSubsystem(projections)
-                        .WithSslTargetHost(options.SslTargetHost);
+                        .WithSslTargetHost(options.SslTargetHost)
+                        .RunProjections(options.RunProjections, options.ProjectionThreads);
 
             if(options.DiscoverViaDns)
                 builder.WithClusterDnsName(options.ClusterDns);
