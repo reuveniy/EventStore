@@ -95,6 +95,8 @@ namespace EventStore.Core
         protected bool _betterOrdering;
         protected ProjectionType _projectionType;
         protected int _projectionsThreads;
+
+        protected ClusterVNodeSettings _vNodeSettings;
         // ReSharper restore FieldCanBeMadeReadOnly.Local
 
         protected VNodeBuilder()
@@ -117,7 +119,7 @@ namespace EventStore.Core
             _certificate = null;
             _workerThreads = Opts.WorkerThreadsDefault;
 
-            _discoverViaDns = false;
+            _discoverViaDns = Opts.DiscoverViaDnsDefault;
             _clusterDns = Opts.ClusterDnsDefault;
             _gossipSeeds = new List<IPEndPoint>();
 
@@ -711,12 +713,22 @@ namespace EventStore.Core
         }
 
         /// <summary>
-        ///     Enable Queue affinity on reads during write process to try to get better ordering.
+        /// Enable Queue affinity on reads during write process to try to get better ordering.
         /// </summary>
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public VNodeBuilder WithBetterOrdering()
         {
             _betterOrdering = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Enable trusted authentication by an intermediary in the HTTP
+        /// </summary>
+        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
+        public VNodeBuilder EnableTrustedAuth()
+        {
+            _enableTrustedAuth = true;
             return this;
         }
 
@@ -811,9 +823,9 @@ namespace EventStore.Core
         private void EnsureHttpPrefixes()
         {
             if (_intHttpPrefixes == null || _intHttpPrefixes.IsEmpty())
-                _intHttpPrefixes = new List<string>(new[] { _externalHttp.ToHttpUrl() });
-            if (_intHttpPrefixes == null || _intHttpPrefixes.IsEmpty())
-                _intHttpPrefixes = new List<string>(new[] { _externalHttp.ToHttpUrl() });
+                _intHttpPrefixes = new List<string>(new[] { _internalHttp.ToHttpUrl() });
+            if (_extHttpPrefixes == null || _extHttpPrefixes.IsEmpty())
+                _extHttpPrefixes = new List<string>(new[] { _externalHttp.ToHttpUrl() });
 
             if (!Runtime.IsMono)
                 return;
@@ -853,7 +865,7 @@ namespace EventStore.Core
                     _inMemoryDb);
             var db = new TFChunkDb(dbConfig);
 
-            var vNodeSettings = new ClusterVNodeSettings(Guid.NewGuid(),
+            _vNodeSettings = new ClusterVNodeSettings(Guid.NewGuid(),
                     0,
                     _internalTcp,
                     _internalSecureTcp,
@@ -907,7 +919,7 @@ namespace EventStore.Core
                     _unsafeIgnoreHardDelete,
                     _betterOrdering);
             var infoController = new InfoController(options, _projectionType);
-            return new ClusterVNode(db, vNodeSettings, GetGossipSource(), infoController, _subsystems.ToArray());
+            return new ClusterVNode(db, _vNodeSettings, GetGossipSource(), infoController, _subsystems.ToArray());
         }
 
 

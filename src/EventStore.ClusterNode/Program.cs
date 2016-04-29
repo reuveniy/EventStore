@@ -253,6 +253,8 @@ namespace EventStore.ClusterNode
                 builder.AddExternalHttpPrefix(prefix);
             }
             
+            if(options.EnableTrustedAuth)
+                builder.EnableTrustedAuth();
             if(options.StartStandardProjections)
                 builder.StartStandardProjections();
             if(options.DisableHTTPCaching)
