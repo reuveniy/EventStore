@@ -169,6 +169,23 @@ namespace EventStore.Core
             _betterOrdering = Opts.BetterOrderingDefault;
         }
 
+        protected VNodeBuilder WithSingleNodeSettings()
+        {
+            _clusterNodeCount = 1;
+            _prepareAckCount = 1;
+            _commitAckCount = 1;
+            return this;
+        }
+
+        protected VNodeBuilder WithClusterNodeSettings(int clusterNodeCount)
+        {
+            int quorumSize = clusterNodeCount / 2 + 1;
+            _clusterNodeCount = clusterNodeCount;
+            _prepareAckCount = quorumSize;
+            _commitAckCount = quorumSize;
+            return this;
+        }
+
         /// <summary>
         /// Start standard projections.
         /// </summary>

@@ -284,25 +284,14 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 
         public static TestVNodeBuilder AsSingleNode()
         {
-            var ret = new TestVNodeBuilder
-            {
-                _clusterNodeCount = 1,
-                _prepareAckCount = 1,
-                _commitAckCount = 1
-            };
-            return ret;
+            var ret = new TestVNodeBuilder().WithSingleNodeSettings();
+            return (TestVNodeBuilder)ret;
         }
 
         public static TestVNodeBuilder AsClusterMember(int clusterSize)
         {
-            int quorumSize = clusterSize / 2;
-            var ret = new TestVNodeBuilder
-            {
-                _clusterNodeCount = clusterSize,
-                _prepareAckCount = quorumSize,
-                _commitAckCount = quorumSize
-            };
-            return ret;
+            var ret = new TestVNodeBuilder().WithClusterNodeSettings(clusterSize);
+            return (TestVNodeBuilder)ret;
         }
         
         protected override void SetUpProjectionsIfNeeded()

@@ -19,13 +19,8 @@ namespace EventStore.ClusterNode
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public static ClusterVNodeBuilder AsSingleNode()
         {
-            var ret = new ClusterVNodeBuilder
-            {
-                _clusterNodeCount = 1,
-                _prepareAckCount = 1,
-                _commitAckCount = 1
-            };
-            return ret;
+            var ret = new ClusterVNodeBuilder().WithSingleNodeSettings();
+            return (ClusterVNodeBuilder)ret;
         }
 
         /// <summary>
@@ -34,14 +29,8 @@ namespace EventStore.ClusterNode
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public static ClusterVNodeBuilder AsClusterMember(int clusterSize)
         {
-            int quorumSize = clusterSize / 2;
-            var ret = new ClusterVNodeBuilder
-            {
-                _clusterNodeCount = clusterSize,
-                _prepareAckCount = quorumSize,
-                _commitAckCount = quorumSize
-            };
-            return ret;
+            var ret = new ClusterVNodeBuilder().WithClusterNodeSettings(clusterSize);
+            return (ClusterVNodeBuilder)ret;
         }
         
         protected override void SetUpProjectionsIfNeeded()

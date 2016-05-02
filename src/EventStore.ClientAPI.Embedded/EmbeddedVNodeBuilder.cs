@@ -19,13 +19,8 @@ namespace EventStore.ClientAPI.Embedded
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public static EmbeddedVNodeBuilder AsSingleNode()
         {
-            var ret = new EmbeddedVNodeBuilder
-            {
-                _clusterNodeCount = 1,
-                _prepareAckCount = 1,
-                _commitAckCount = 1
-            };
-            return ret;
+            var ret = new EmbeddedVNodeBuilder().WithSingleNodeSettings();
+            return (EmbeddedVNodeBuilder)ret;
         }
 
         /// <summary>
@@ -34,14 +29,8 @@ namespace EventStore.ClientAPI.Embedded
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public static EmbeddedVNodeBuilder AsClusterMember(int clusterSize)
         {
-            int quorumSize = clusterSize / 2;
-            var ret = new EmbeddedVNodeBuilder
-            {
-                _clusterNodeCount = clusterSize,
-                _prepareAckCount = quorumSize,
-                _commitAckCount = quorumSize
-            };
-            return ret;
+            var ret = new EmbeddedVNodeBuilder().WithClusterNodeSettings(clusterSize);
+            return (EmbeddedVNodeBuilder)ret;
         }
 
         /// <summary>
