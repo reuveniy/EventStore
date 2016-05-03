@@ -397,7 +397,7 @@ namespace EventStore.Core
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public VNodeBuilder DoNotVerifyDbHashes()
         {
-            _skipVerifyDbHashes = false;
+            _skipVerifyDbHashes = true;
             return this;
         }
 

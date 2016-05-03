@@ -1,60 +1,12 @@
 using EventStore.Common.Options;
 using EventStore.Core.Util;
-using EventStore.Core.Cluster.Settings;
-using EventStore.Core.Services.Monitoring;
 using EventStore.Core.Authentication;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 
 namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 {
-    [TestFixture]
-    public abstract class SingleNodeScenario
-    {
-        protected VNodeBuilder _builder;
-        protected ClusterVNode _node;
-        protected ClusterVNodeSettings _settings;
-
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
-        {
-            _builder = TestVNodeBuilder.AsSingleNode()
-                                        .OnDefaultEndpoints();
-            Given();
-            _node = _builder.Build();
-            _settings = ((TestVNodeBuilder)_builder).GetSettings();
-            Console.WriteLine(_settings);
-        }
-
-        public abstract void Given();
-    }
-
-        [TestFixture]
-    public abstract class ClusterMemberScenario
-    {
-        protected VNodeBuilder _builder;
-        protected ClusterVNode _node;
-        protected ClusterVNodeSettings _settings;
-        protected int _clusterSize = 3;
-
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
-        {
-            _builder = TestVNodeBuilder.AsClusterMember(_clusterSize)
-                                        .OnDefaultEndpoints();
-            Given();
-            _node = _builder.Build();
-            _settings = ((TestVNodeBuilder)_builder).GetSettings();
-            Console.WriteLine(_settings.ToString());
-        }
-
-        public abstract void Given();
-    }
-
     [TestFixture]
     [Category("Hayley")]
     public class with_default_settings_as_single_node : SingleNodeScenario
@@ -209,98 +161,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
             Console.WriteLine("Quorum size {0}", quorumSize);
             Assert.AreEqual(quorumSize, _settings.PrepareAckCount, "PrepareAckCount");
             Assert.AreEqual(quorumSize, _settings.CommitAckCount, "CommitAckCount");
-        }
-    }
-
-    [TestFixture]
-    [Category("Hayley")]
-    public class with_trusted_auth_enabled : SingleNodeScenario
-    {
-        public override void Given()
-        {
-            _builder.EnableTrustedAuth();
-        }
-
-        [Test]
-        public void should_enable_trusted_authentication()
-        {
-            Assert.IsTrue(_settings.EnableTrustedAuth);
-        }
-    }
-
-    [TestFixture]
-    [Category("Hayley")]
-    public class with_no_admin_on_public_interface : SingleNodeScenario
-    {
-        public override void Given()
-        {
-            _builder.NoAdminOnPublicInterface();
-        }
-
-        [Test]
-        public void should_disable_admin_on_public()
-        {
-            Assert.IsFalse(_settings.AdminOnPublic);
-        }
-    }
-
-    [TestFixture]
-    [Category("Hayley")]
-    public class with_no_gossip_on_public_interface : SingleNodeScenario
-    {
-        public override void Given()
-        {
-            _builder.NoGossipOnPublicInterface();
-        }
-
-        [Test]
-        public void should_disable_gossip_on_public()
-        {
-            Assert.IsFalse(_settings.GossipOnPublic);
-        }
-    }
-
-    [TestFixture]
-    [Category("Hayley")]
-    public class with_no_stats_on_public_interface : SingleNodeScenario
-    {
-        public override void Given()
-        {
-            _builder.NoStatsOnPublicInterface();
-        }
-
-        [Test]
-        public void should_disable_gossip_on_public()
-        {
-            Assert.IsFalse(_settings.StatsOnPublic);
-        }
-    }
-
-    public class TestVNodeBuilder : VNodeBuilder
-    {
-        protected TestVNodeBuilder()
-        {
-        }
-
-        public static TestVNodeBuilder AsSingleNode()
-        {
-            var ret = new TestVNodeBuilder().WithSingleNodeSettings();
-            return (TestVNodeBuilder)ret;
-        }
-
-        public static TestVNodeBuilder AsClusterMember(int clusterSize)
-        {
-            var ret = new TestVNodeBuilder().WithClusterNodeSettings(clusterSize);
-            return (TestVNodeBuilder)ret;
-        }
-        
-        protected override void SetUpProjectionsIfNeeded()
-        {
-        }
-
-        public ClusterVNodeSettings GetSettings()
-        {
-            return _vNodeSettings;
         }
     }
 }
