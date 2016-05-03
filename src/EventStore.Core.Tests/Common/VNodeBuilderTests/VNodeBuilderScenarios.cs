@@ -15,7 +15,8 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
         public void TestFixtureSetUp()
         {
             _builder = TestVNodeBuilder.AsSingleNode()
-                                        .OnDefaultEndpoints();
+                                       .RunInMemory()
+                                       .OnDefaultEndpoints();
             Given();
             _node = _builder.Build();
             _settings = ((TestVNodeBuilder)_builder).GetSettings();
@@ -38,7 +39,8 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
         public void TestFixtureSetUp()
         {
             _builder = TestVNodeBuilder.AsClusterMember(_clusterSize)
-                                        .OnDefaultEndpoints();
+                                       .RunInMemory()
+                                       .OnDefaultEndpoints();
             _quorumSize = _clusterSize / 2 + 1;
             Given();
             _node = _builder.Build();

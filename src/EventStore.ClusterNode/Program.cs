@@ -96,10 +96,6 @@ namespace EventStore.ClusterNode
             if (!_clusterNodeMutex.Acquire())
                 throw new Exception(string.Format("Couldn't acquire exclusive Cluster Node mutex '{0}'.", _clusterNodeMutex.MutexName));
 
-            var dbConfig = CreateDbConfig(dbPath, opts.CachedChunks, opts.ChunksCacheSize, opts.MemDb);
-            FileStreamExtensions.ConfigureFlush(disableFlushToDisk: opts.UnsafeDisableFlushToDisk);
-            var db = new TFChunkDb(dbConfig);
-
             if (!opts.DiscoverViaDns && opts.GossipSeed.Length == 0)
             {
                 if (opts.ClusterSize == 1)
@@ -111,12 +107,6 @@ namespace EventStore.ClusterNode
             }
 
 
-            // TODO: expose instance ID Log.Info("{0,-25} {1}", "INSTANCE ID:", _node..NodeInfo.InstanceId);
-            Log.Info("{0,-25} {1}", "DATABASE:", db.Config.Path);
-            Log.Info("{0,-25} {1} (0x{1:X})", "WRITER CHECKPOINT:", db.Config.WriterCheckpoint.Read());
-            Log.Info("{0,-25} {1} (0x{1:X})", "CHASER CHECKPOINT:", db.Config.ChaserCheckpoint.Read());
-            Log.Info("{0,-25} {1} (0x{1:X})", "EPOCH CHECKPOINT:", db.Config.EpochCheckpoint.Read());
-            Log.Info("{0,-25} {1} (0x{1:X})", "TRUNCATE CHECKPOINT:", db.Config.TruncateCheckpoint.Read());
 
             var runProjections = opts.RunProjections;
             var enabledNodeSubsystems = runProjections >= ProjectionType.System
@@ -211,6 +201,11 @@ namespace EventStore.ClusterNode
                 builder = ClusterVNodeBuilder.AsClusterMember(options.ClusterSize);
             } else {
                 builder = ClusterVNodeBuilder.AsSingleNode();
+            }
+            if(options.MemDb) {
+                builder = builder.RunInMemory();
+            } else {
+                builder = builder.RunOnDisk(options.Db);
             }
 
             builder.WithInternalTcpOn(intTcpEndPoint)

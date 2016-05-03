@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using EventStore.Common.Log;
 using EventStore.Common.Options;
 using EventStore.Common.Utils;
 using EventStore.Core;
@@ -27,9 +28,12 @@ namespace EventStore.Core
     public abstract class VNodeBuilder
     {
         // ReSharper disable FieldCanBeMadeReadOnly.Local - as more options are added
+        protected ILogger _log;
+
         protected int _chunkSize;
         protected string _dbPath;
         protected long _chunksCacheSize;
+        protected int _cachedChunks;
         protected bool _inMemoryDb;
         protected bool _startStandardProjections;
         protected bool _disableHTTPCaching;
@@ -92,6 +96,7 @@ namespace EventStore.Core
         protected string _index;
         protected int _indexCacheDepth;
         protected bool _unsafeIgnoreHardDelete;
+        protected bool _unsafeDisableFlushToDisk;
         protected bool _betterOrdering;
         protected ProjectionType _projectionType;
         protected int _projectionsThreads;
@@ -101,9 +106,12 @@ namespace EventStore.Core
 
         protected VNodeBuilder()
         {
+            _log = LogManager.GetLoggerFor<VNodeBuilder>();
+
             _chunkSize = TFConsts.ChunkSize;
             _dbPath = Path.Combine(Path.GetTempPath(), "EmbeddedEventStore", string.Format("{0:yyyy-MM-dd_HH.mm.ss.ffffff}-EmbeddedNode", DateTime.UtcNow));
             _chunksCacheSize = TFConsts.ChunksCacheSize;
+            _cachedChunks = Opts.CachedChunksDefault;
             _inMemoryDb = true;
 
             _externalTcp = new IPEndPoint(Opts.ExternalIpDefault, Opts.ExternalHttpPortDefault);
@@ -167,6 +175,7 @@ namespace EventStore.Core
             _indexCacheDepth = Opts.IndexCacheDepthDefault;
             _unsafeIgnoreHardDelete = Opts.UnsafeIgnoreHardDeleteDefault;
             _betterOrdering = Opts.BetterOrderingDefault;
+            _unsafeDisableFlushToDisk = Opts.UnsafeDisableFlushToDiskDefault;
         }
 
         protected VNodeBuilder WithSingleNodeSettings()
@@ -437,7 +446,7 @@ namespace EventStore.Core
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
         public VNodeBuilder VerifyDbHashes()
         {
-            _skipVerifyDbHashes = true;
+            _skipVerifyDbHashes = false;
             return this;
         }
 
@@ -730,6 +739,16 @@ namespace EventStore.Core
         }
 
         /// <summary>
+        /// Disables Hard Deletes (UNSAFE: use to remove hard deletes)
+        /// </summary>
+        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
+        public VNodeBuilder WithUnsafeDisableFlushToDisk()
+        {
+            _unsafeDisableFlushToDisk = true;
+            return this;
+        }
+
+        /// <summary>
         /// Enable Queue affinity on reads during write process to try to get better ordering.
         /// </summary>
         /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
@@ -837,6 +856,18 @@ namespace EventStore.Core
             return this;
         }
 
+        /// <summary>
+        /// The number of chunks to cache in unmanaged memory.        
+        /// </summary>
+        /// <param name="cachedChunks">The number of chunks to cache</param>
+        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
+        public VNodeBuilder WithTfCachedChunks(int cachedChunks)
+        {
+            _cachedChunks = cachedChunks;
+
+            return this;
+        }
+
         private void EnsureHttpPrefixes()
         {
             if (_intHttpPrefixes == null || _intHttpPrefixes.IsEmpty())
@@ -878,8 +909,10 @@ namespace EventStore.Core
             EnsureHttpPrefixes();
             SetUpProjectionsIfNeeded();
 
-            var dbConfig = CreateDbConfig(_chunkSize, _dbPath, _chunksCacheSize,
-                    _inMemoryDb);
+            var dbConfig = CreateDbConfig(_chunkSize, _cachedChunks, _dbPath, _chunksCacheSize,
+                    _inMemoryDb, _log);
+            FileStreamExtensions.ConfigureFlush(disableFlushToDisk: _unsafeDisableFlushToDisk);
+
             var db = new TFChunkDb(dbConfig);
 
             _vNodeSettings = new ClusterVNodeSettings(Guid.NewGuid(),
@@ -936,6 +969,14 @@ namespace EventStore.Core
                     _unsafeIgnoreHardDelete,
                     _betterOrdering);
             var infoController = new InfoController(options, _projectionType);
+
+            _log.Info("{0,-25} {1}", "INSTANCE ID:", _vNodeSettings.NodeInfo.InstanceId);
+            _log.Info("{0,-25} {1}", "DATABASE:", db.Config.Path);
+            _log.Info("{0,-25} {1} (0x{1:X})", "WRITER CHECKPOINT:", db.Config.WriterCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "CHASER CHECKPOINT:", db.Config.ChaserCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "EPOCH CHECKPOINT:", db.Config.EpochCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "TRUNCATE CHECKPOINT:", db.Config.TruncateCheckpoint.Read());
+
             return new ClusterVNode(db, _vNodeSettings, GetGossipSource(), infoController, _subsystems.ToArray());
         }
 
@@ -962,7 +1003,7 @@ namespace EventStore.Core
             return gossipSeedSource;
         }
 
-        private static TFChunkDbConfig CreateDbConfig(int chunkSize, string dbPath, long chunksCacheSize, bool inMemDb)
+        private static TFChunkDbConfig CreateDbConfig(int chunkSize, int cachedChunks, string dbPath, long chunksCacheSize, bool inMemDb, ILogger log)
         {
             ICheckpoint writerChk;
             ICheckpoint chaserChk;
@@ -977,6 +1018,26 @@ namespace EventStore.Core
             }
             else
             {
+                try
+                {
+                    if (!Directory.Exists(dbPath)) // mono crashes without this check
+                        Directory.CreateDirectory(dbPath);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    if (dbPath == Locations.DefaultDataDirectory)
+                    {
+                        log.Info("Access to path {0} denied. The Event Store database will be created in {1}", dbPath, Locations.FallbackDefaultDataDirectory);
+                        dbPath = Locations.FallbackDefaultDataDirectory;
+                        log.Info("Defaulting DB Path to {0}", dbPath);
+
+                        if (!Directory.Exists(dbPath)) // mono crashes without this check
+                            Directory.CreateDirectory(dbPath);
+                    }
+                    else {
+                        throw;
+                    }
+                }
                 var writerCheckFilename = Path.Combine(dbPath, Checkpoint.Writer + ".chk");
                 var chaserCheckFilename = Path.Combine(dbPath, Checkpoint.Chaser + ".chk");
                 var epochCheckFilename = Path.Combine(dbPath, Checkpoint.Epoch + ".chk");
@@ -996,15 +1057,21 @@ namespace EventStore.Core
                     truncateChk = new MemoryMappedFileCheckpoint(truncateCheckFilename, Checkpoint.Truncate, cached: true, initValue: -1);
                 }
             }
+
+            var cache = cachedChunks >= 0
+                                ? cachedChunks*(long)(TFConsts.ChunkSize + ChunkHeader.Size + ChunkFooter.Size)
+                                : chunksCacheSize;
+
             var nodeConfig = new TFChunkDbConfig(dbPath,
                     new VersionedPatternFileNamingStrategy(dbPath, "chunk-"),
                     chunkSize,
-                    chunksCacheSize,
+                    cache,
                     writerChk,
                     chaserChk,
                     epochChk,
                     truncateChk,
                     inMemDb);
+
             return nodeConfig;
         }
     }
