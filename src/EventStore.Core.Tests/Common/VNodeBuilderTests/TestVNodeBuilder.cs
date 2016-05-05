@@ -30,6 +30,11 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
             return _vNodeSettings;
         }
 
+        public TFChunkDb GetDb()
+        {
+            return _db;
+        }
+
         public TFChunkDbConfig GetDbConfig()
         {
             return _dbConfig;

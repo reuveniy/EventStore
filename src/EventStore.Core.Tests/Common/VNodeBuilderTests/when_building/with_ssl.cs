@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Reflection;
+using EventStore.Core.Tests.Services.Transport.Tcp;
 
 namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 {
@@ -73,6 +74,63 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
                 stream.CopyTo(fileStream);
                 return filePath;
             }
+        }
+    }
+
+    [TestFixture]
+    public class with_ssl_enabled_and_using_a_security_certificate : SingleNodeScenario
+    {
+        private IPEndPoint _internalSecTcp;
+        private IPEndPoint _externalSecTcp;
+        private X509Certificate2 _certificate;
+        public override void Given()
+        {
+            _certificate = ssl_connections.GetCertificate();
+            var baseIpAddress = IPAddress.Parse("192.168.1.15");
+            _internalSecTcp = new IPEndPoint(baseIpAddress, 1114);
+            _externalSecTcp = new IPEndPoint(baseIpAddress, 1115);
+            _builder.WithInternalSecureTcpOn(_internalSecTcp)
+                    .WithExternalSecureTcpOn(_externalSecTcp)
+                    .EnableSsl()
+                    .WithSslTargetHost("Host")
+                    .ValidateSslServer()
+                    .WithServerCertificate(_certificate);
+        }
+        
+        [Test]
+        public void should_set_ssl_to_enabled()
+        {
+            Assert.IsTrue(_settings.UseSsl);
+        }
+
+        [Test]
+        public void should_set_certificate()
+        {
+            Assert.AreNotEqual("n/a", _settings.Certificate == null ? "n/a" : _settings.Certificate.ToString());
+        }
+
+        [Test]
+        public void should_set_internal_secure_tcp_endpoint()
+        {
+            Assert.AreEqual(_internalSecTcp, _settings.NodeInfo.InternalSecureTcp);
+        }
+
+        [Test]
+        public void should_set_external_secure_tcp_endpoint()
+        {
+            Assert.AreEqual(_externalSecTcp, _settings.NodeInfo.ExternalSecureTcp);
+        }
+
+        [Test]
+        public void should_set_ssl_target_host()
+        {
+            Assert.AreEqual("Host", _settings.SslTargetHost);
+        }
+
+        [Test]
+        public void should_enable_validating_ssl_server()
+        {
+            Assert.IsTrue(_settings.SslValidateServer);
         }
     }
 }

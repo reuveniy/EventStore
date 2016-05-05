@@ -101,6 +101,7 @@ namespace EventStore.Core
         protected ProjectionType _projectionType;
         protected int _projectionsThreads;
 
+        protected TFChunkDb _db;
         protected ClusterVNodeSettings _vNodeSettings;
         protected TFChunkDbConfig _dbConfig;
         // ReSharper restore FieldCanBeMadeReadOnly.Local
@@ -791,6 +792,18 @@ namespace EventStore.Core
             return this;
         }
 
+
+        /// <summary>
+        /// Sets the Server SSL Certificate
+        /// </summary>
+        /// <param name="sslCertificate">The server SSL certificate to use</param>
+        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
+        public VNodeBuilder WithServerCertificate(X509Certificate2 sslCertificate)
+        {
+            _certificate = sslCertificate;
+            return this;
+        }
+
         /// <summary>
         /// Sets the Server SSL Certificate to be loaded from a certificate store
         /// </summary>
@@ -925,7 +938,7 @@ namespace EventStore.Core
                     _inMemoryDb, _log);
             FileStreamExtensions.ConfigureFlush(disableFlushToDisk: _unsafeDisableFlushToDisk);
 
-            var db = new TFChunkDb(_dbConfig);
+            _db = new TFChunkDb(_dbConfig);
 
             _vNodeSettings = new ClusterVNodeSettings(Guid.NewGuid(),
                     0,
@@ -983,13 +996,13 @@ namespace EventStore.Core
             var infoController = new InfoController(options, _projectionType);
 
             _log.Info("{0,-25} {1}", "INSTANCE ID:", _vNodeSettings.NodeInfo.InstanceId);
-            _log.Info("{0,-25} {1}", "DATABASE:", db.Config.Path);
-            _log.Info("{0,-25} {1} (0x{1:X})", "WRITER CHECKPOINT:", db.Config.WriterCheckpoint.Read());
-            _log.Info("{0,-25} {1} (0x{1:X})", "CHASER CHECKPOINT:", db.Config.ChaserCheckpoint.Read());
-            _log.Info("{0,-25} {1} (0x{1:X})", "EPOCH CHECKPOINT:", db.Config.EpochCheckpoint.Read());
-            _log.Info("{0,-25} {1} (0x{1:X})", "TRUNCATE CHECKPOINT:", db.Config.TruncateCheckpoint.Read());
+            _log.Info("{0,-25} {1}", "DATABASE:", _db.Config.Path);
+            _log.Info("{0,-25} {1} (0x{1:X})", "WRITER CHECKPOINT:", _db.Config.WriterCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "CHASER CHECKPOINT:", _db.Config.ChaserCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "EPOCH CHECKPOINT:", _db.Config.EpochCheckpoint.Read());
+            _log.Info("{0,-25} {1} (0x{1:X})", "TRUNCATE CHECKPOINT:", _db.Config.TruncateCheckpoint.Read());
 
-            return new ClusterVNode(db, _vNodeSettings, GetGossipSource(), infoController, _subsystems.ToArray());
+            return new ClusterVNode(_db, _vNodeSettings, GetGossipSource(), infoController, _subsystems.ToArray());
         }
 
 
