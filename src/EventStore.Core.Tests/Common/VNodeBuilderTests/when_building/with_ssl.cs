@@ -65,9 +65,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 
         private string GetCertificatePath()
         {
-            var fileName = string.Format("cert-{0}.p12", Guid.NewGuid());
-            var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var filePath = Path.Combine(basePath, fileName);
+            var filePath = Path.Combine(Path.GetTempPath(), string.Format("cert-{0}.p12", Guid.NewGuid()));
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("EventStore.Core.Tests.server.p12"))
             using (var fileStream = File.Create(filePath))
             {
