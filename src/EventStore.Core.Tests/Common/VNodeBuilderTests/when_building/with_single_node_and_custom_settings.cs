@@ -1,11 +1,49 @@
 using NUnit.Framework;
 using System;
 using System.Net;
+using EventStore.Core.TransactionLog.Chunks;
 
 namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 {
     [TestFixture]
-    [Category("Hayley")]
+    public class with_run_on_disk : SingleNodeScenario
+    {
+        private string _dbPath;
+        public override void Given()
+        {
+            _dbPath =string.Format("Test-{0}", Guid.NewGuid());
+            _builder.RunOnDisk(_dbPath);
+        }
+
+        [Test]
+        public void should_set_memdb_to_false()
+        {
+            Assert.IsFalse(_dbConfig.InMemDb);
+        }
+        
+        [Test]
+        public void should_set_the_db_path()
+        {
+            Assert.AreEqual(_dbPath, _dbConfig.Path);
+        }
+    }
+
+    [TestFixture]
+    public class with_run_in_memory : SingleNodeScenario
+    {
+        public override void Given()
+        {
+            _builder.RunInMemory();
+        }
+
+        [Test]
+        public void should_set_memdb_to_true()
+        {
+            Assert.IsTrue(_dbConfig.InMemDb);
+        }
+    }
+
+    [TestFixture]
     public class with_log_http_requests_enabled : SingleNodeScenario
     {
         public override void Given()
@@ -14,15 +52,14 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
         }
 
         [Test]
-        public void should_turn_on_http_logging()
+        public void should_set_http_logging_to_true()
         {
             Assert.IsTrue(_settings.LogHttpRequests);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_worker_threads_set_to_custom_amount : SingleNodeScenario
+    public class with_custom_number_of_worker_threads : SingleNodeScenario
     {
         public override void Given()
         {
@@ -37,8 +74,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_stats_period_set_to_custom_amount : SingleNodeScenario
+    public class with_custom_stats_period : SingleNodeScenario
     {
         public override void Given()
         {
@@ -53,7 +89,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_histograms_enabled : SingleNodeScenario
     {
         public override void Given()
@@ -69,7 +104,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_trusted_auth_enabled : SingleNodeScenario
     {
         public override void Given()
@@ -85,7 +119,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_http_caching_disabled : SingleNodeScenario
     {
         public override void Given()
@@ -101,7 +134,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class without_verifying_db_hashes : SingleNodeScenario
     {
         public override void Given()
@@ -110,15 +142,30 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
         }
 
         [Test]
-        public void should_not_verify_db_hashes()
+        public void should_set_verify_db_hashes_to_false()
         {
             Assert.IsFalse(_settings.VerifyDbHash);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_min_flush_delay_set_to_custom_value : SingleNodeScenario
+    public class with_verifying_db_hashes : SingleNodeScenario
+    {
+        public override void Given()
+        {
+            _builder.DoNotVerifyDbHashes() // Turn off verification before turning it back on
+                    .VerifyDbHashes();
+        }
+
+        [Test]
+        public void should_set_verify_db_hashes_to_true()
+        {
+            Assert.IsTrue(_settings.VerifyDbHash);
+        }
+    }
+
+    [TestFixture]
+    public class with_custom_min_flush_delay : SingleNodeScenario
     {
         public override void Given()
         {
@@ -133,8 +180,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_scavenge_history_max_age_set_to_custom_value : SingleNodeScenario
+    public class with_custom_scavenge_history_max_age : SingleNodeScenario
     {
         public override void Given()
         {
@@ -149,7 +195,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_scavenge_merging_disabled : SingleNodeScenario
     {
         public override void Given()
@@ -165,8 +210,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_max_memtable_size_set_to_custom_value : SingleNodeScenario
+    public class with_custom_max_memtable_size : SingleNodeScenario
     {
         public override void Given()
         {
@@ -181,7 +225,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_standard_projections_started : SingleNodeScenario
     {
         public override void Given()
@@ -190,14 +233,13 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
         }
 
         [Test]
-        public void should_start_standard_projections()
+        public void should_set_start_standard_projections_to_true()
         {
             Assert.IsTrue(_settings.StartStandardProjections);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_ignore_hard_delete_enabled : SingleNodeScenario
     {
         public override void Given()
@@ -213,7 +255,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_better_ordering_enabled : SingleNodeScenario
     {
         public override void Given()
@@ -222,15 +263,14 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
         }
 
         [Test]
-        public void should_set_the_min_flush_delay()
+        public void should_set_better_ordering()
         {
             Assert.IsTrue(_settings.BetterOrdering);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_index_path_set_to_custom_value : SingleNodeScenario
+    public class with_custom_index_path : SingleNodeScenario
     {
         public override void Given()
         {
@@ -245,8 +285,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_prepare_timeout_set_to_custom_value : SingleNodeScenario
+    public class with_custom_prepare_timeout : SingleNodeScenario
     {
         public override void Given()
         {
@@ -261,8 +300,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_commit_timeout_set_to_custom_value : SingleNodeScenario
+    public class with_custom_commit_timeout : SingleNodeScenario
     {
         public override void Given()
         {
@@ -277,8 +315,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_internal_heartbeat_interval_set_to_custom_value : SingleNodeScenario
+    public class with_custom_internal_heartbeat_interval : SingleNodeScenario
     {
         public override void Given()
         {
@@ -293,8 +330,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_internal_heartbeat_timeout_set_to_custom_value : SingleNodeScenario
+    public class with_custom_internal_heartbeat_timeout : SingleNodeScenario
     {
         public override void Given()
         {
@@ -309,8 +345,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_external_heartbeat_interval_set_to_custom_value : SingleNodeScenario
+    public class with_custom_external_heartbeat_interval : SingleNodeScenario
     {
         public override void Given()
         {
@@ -325,8 +360,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_external_heartbeat_timeout_set_to_custom_value : SingleNodeScenario
+    public class with_custom_external_heartbeat_timeout : SingleNodeScenario
     {
         public override void Given()
         {
@@ -341,7 +375,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_no_admin_on_public_interface : SingleNodeScenario
     {
         public override void Given()
@@ -357,7 +390,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_no_gossip_on_public_interface : SingleNodeScenario
     {
         public override void Given()
@@ -373,7 +405,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_no_stats_on_public_interface : SingleNodeScenario
     {
         public override void Given()
@@ -389,8 +420,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_ip_endpoints_set_to_custom_values : SingleNodeScenario
+    public class with_custom_ip_endpoints : SingleNodeScenario
     {
         private IPEndPoint _internalHttp;
         private IPEndPoint _externalHttp;
@@ -449,7 +479,6 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_custom_http_prefixes : SingleNodeScenario
     {
 
@@ -494,50 +523,83 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_ssl_enabled : SingleNodeScenario
+    public class with_custom_index_cache_depth : SingleNodeScenario
     {
         public override void Given()
         {
-            _builder.EnableSsl();
+            _builder.WithIndexCacheDepth(8);
         }
 
         [Test]
-        public void should_set_ssl_to_enabled()
+        public void should_set_index_cache_depth()
         {
-            Assert.IsTrue(_settings.UseSsl);
+            Assert.AreEqual(8, _settings.IndexCacheDepth);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_ssl_target_host : SingleNodeScenario
+    public class with_custom_authentication_provider_factory : SingleNodeScenario
     {
         public override void Given()
         {
-            _builder.WithSslTargetHost("Host");
+            _builder.WithAuthenticationProvider(new TestAuthenticationProviderFactory());
         }
 
         [Test]
-        public void should_set_ssl_target_host()
+        public void should_set_authentication_provider_factory()
         {
-            Assert.AreEqual("Host", _settings.SslTargetHost);
+            Assert.IsInstanceOf(typeof(TestAuthenticationProviderFactory), _settings.AuthenticationProviderFactory);
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
-    public class with_validate_ssl_server_enabled : SingleNodeScenario
+    public class with_custom_chunk_size : SingleNodeScenario
     {
+        private int _chunkSize;
         public override void Given()
         {
-            _builder.ValidateSslServer();
+            _chunkSize = 268435712;
+            _builder.WithTfChunkSize(_chunkSize);
         }
 
         [Test]
-        public void should_enable_validating_ssl_server()
+        public void should_set_chunk_size()
         {
-            Assert.IsTrue(_settings.SslValidateServer);
+            Assert.AreEqual(_chunkSize, _dbConfig.ChunkSize);
         }
     }
+
+    [TestFixture]
+    public class with_custom_chunk_cache_size : SingleNodeScenario
+    {
+        private long _chunkCacheSize;
+        public override void Given()
+        {
+            _chunkCacheSize = 268435712;
+            _builder.WithTfChunksCacheSize(_chunkCacheSize);
+        }
+
+        [Test]
+        public void should_set_max_chunk_cache_size()
+        {
+            Assert.AreEqual(_chunkCacheSize, _dbConfig.MaxChunksCacheSize);
+        }
+    }
+
+    [TestFixture]
+    public class with_custom_number_of_cached_chunks : SingleNodeScenario
+    {
+        public override void Given()
+        {
+            _builder.WithTfCachedChunks(10);
+        }
+
+        [Test]
+        public void should_set_max_chunk_size_to_the_size_of_the_number_of_cached_chunks()
+        {
+            var chunkSizeResult = 10*(long)(TFConsts.ChunkSize + ChunkHeader.Size + ChunkFooter.Size);
+            Assert.AreEqual(chunkSizeResult, _dbConfig.MaxChunksCacheSize);
+        }
+    }
+
 }

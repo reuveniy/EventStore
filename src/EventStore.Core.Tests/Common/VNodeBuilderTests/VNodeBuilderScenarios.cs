@@ -1,4 +1,5 @@
 using EventStore.Core.Cluster.Settings;
+using EventStore.Core.TransactionLog.Chunks;
 using NUnit.Framework;
 using System;
 
@@ -10,9 +11,10 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
         protected VNodeBuilder _builder;
         protected ClusterVNode _node;
         protected ClusterVNodeSettings _settings;
+        protected TFChunkDbConfig _dbConfig;
 
         [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        public virtual void TestFixtureSetUp()
         {
             _builder = TestVNodeBuilder.AsSingleNode()
                                        .RunInMemory()
@@ -20,6 +22,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
             Given();
             _node = _builder.Build();
             _settings = ((TestVNodeBuilder)_builder).GetSettings();
+            _dbConfig = ((TestVNodeBuilder)_builder).GetDbConfig();
             Console.WriteLine(_settings);
         }
 
@@ -32,11 +35,12 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
         protected VNodeBuilder _builder;
         protected ClusterVNode _node;
         protected ClusterVNodeSettings _settings;
+        protected TFChunkDbConfig _dbConfig;
         protected int _clusterSize = 3;
         protected int _quorumSize;
 
         [TestFixtureSetUp]
-        public void TestFixtureSetUp()
+        public virtual void TestFixtureSetUp()
         {
             _builder = TestVNodeBuilder.AsClusterMember(_clusterSize)
                                        .RunInMemory()
@@ -45,6 +49,7 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests
             Given();
             _node = _builder.Build();
             _settings = ((TestVNodeBuilder)_builder).GetSettings();
+            _dbConfig = ((TestVNodeBuilder)_builder).GetDbConfig();
             Console.WriteLine(_settings);
         }
 

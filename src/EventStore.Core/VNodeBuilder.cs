@@ -102,6 +102,7 @@ namespace EventStore.Core
         protected int _projectionsThreads;
 
         protected ClusterVNodeSettings _vNodeSettings;
+        protected TFChunkDbConfig _dbConfig;
         // ReSharper restore FieldCanBeMadeReadOnly.Local
 
         protected VNodeBuilder()
@@ -459,6 +460,17 @@ namespace EventStore.Core
         {
             _clusterDns = name;
             _discoverViaDns = true;
+            return this;
+        }
+
+
+        /// <summary>
+        /// Disable dns discovery for the cluster
+        /// </summary>
+        /// <returns>A <see cref="VNodeBuilder"/> with the options set</returns>
+        public VNodeBuilder DisableDnsDiscovery()
+        {
+            _discoverViaDns = false;
             return this;
         }
 
@@ -909,11 +921,11 @@ namespace EventStore.Core
             EnsureHttpPrefixes();
             SetUpProjectionsIfNeeded();
 
-            var dbConfig = CreateDbConfig(_chunkSize, _cachedChunks, _dbPath, _chunksCacheSize,
+            _dbConfig = CreateDbConfig(_chunkSize, _cachedChunks, _dbPath, _chunksCacheSize,
                     _inMemoryDb, _log);
             FileStreamExtensions.ConfigureFlush(disableFlushToDisk: _unsafeDisableFlushToDisk);
 
-            var db = new TFChunkDb(dbConfig);
+            var db = new TFChunkDb(_dbConfig);
 
             _vNodeSettings = new ClusterVNodeSettings(Guid.NewGuid(),
                     0,

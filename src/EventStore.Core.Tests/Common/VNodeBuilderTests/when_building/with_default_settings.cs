@@ -1,6 +1,7 @@
-using EventStore.Common.Options;
-using EventStore.Core.Util;
 using EventStore.Core.Authentication;
+using EventStore.Common.Options;
+using EventStore.Core.TransactionLog.Chunks;
+using EventStore.Core.Util;
 using NUnit.Framework;
 using System;
 using System.Net;
@@ -8,7 +9,6 @@ using System.Net;
 namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
 {
     [TestFixture]
-    [Category("Hayley")]
     public class with_default_settings_as_single_node : SingleNodeScenario
     {
         public override void Given()
@@ -74,11 +74,13 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
             Assert.AreEqual(Opts.IntTcpHeartbeatTimeoutDefault, _settings.IntTcpHeartbeatTimeout.TotalMilliseconds, "IntTcpHeartbeatTimeout");
             Assert.AreEqual(Opts.ExtTcpHeartbeatIntervalDefault, _settings.ExtTcpHeartbeatInterval.TotalMilliseconds, "ExtTcpHeartbeatInterval");
             Assert.AreEqual(Opts.ExtTcpHeartbeatTimeoutDefault, _settings.ExtTcpHeartbeatTimeout.TotalMilliseconds, "ExtTcpHeartbeatTimeout");
+
+            Assert.AreEqual(TFConsts.ChunkSize, _dbConfig.ChunkSize, "ChunkSize");
+            Assert.AreEqual(Opts.ChunksCacheSizeDefault, _dbConfig.MaxChunksCacheSize, "MaxChunksCacheSize");
         }
     }
 
     [TestFixture]
-    [Category("Hayley")]
     public class with_default_settings_as_node_in_a_cluster : ClusterMemberScenario
     {
         public override void Given()
@@ -152,6 +154,9 @@ namespace EventStore.Core.Tests.Common.VNodeBuilderTests.when_building
             Assert.AreEqual(Opts.IntTcpHeartbeatTimeoutDefault, _settings.IntTcpHeartbeatTimeout.TotalMilliseconds, "IntTcpHeartbeatTimeout");
             Assert.AreEqual(Opts.ExtTcpHeartbeatIntervalDefault, _settings.ExtTcpHeartbeatInterval.TotalMilliseconds, "ExtTcpHeartbeatInterval");
             Assert.AreEqual(Opts.ExtTcpHeartbeatTimeoutDefault, _settings.ExtTcpHeartbeatTimeout.TotalMilliseconds, "ExtTcpHeartbeatTimeout");
+
+            Assert.AreEqual(TFConsts.ChunkSize, _dbConfig.ChunkSize, "ChunkSize");
+            Assert.AreEqual(Opts.ChunksCacheSizeDefault, _dbConfig.MaxChunksCacheSize, "MaxChunksCacheSize");
         }
 
         [Test]
